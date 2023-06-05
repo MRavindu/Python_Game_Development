@@ -23,11 +23,19 @@ playerY = 480
 playerX_change = 0
 
 # Enemy
-enemyImg = pygame.image.load('./images/battleship.png')
-enemyX = random.randint(0, 800)
-enemyY = random.randint(50, 150)
-enemyX_change = 0.4
-enemyY_change = 40
+enemyImg = []
+enemyX = []
+enemyY = []
+enemyX_change = []
+enemyY_change = []
+num_of_enemies = 6
+
+for i in range(num_of_enemies):
+    enemyImg.append(pygame.image.load('./images/battleship.png'))
+    enemyX.append(random.randint(0, 735))
+    enemyY.append(random.randint(50, 150))
+    enemyX_change.append(0.4)
+    enemyY_change.append(40)
 
 # Bullet
 bulletImg = pygame.image.load('./images/bullet.png')
@@ -41,15 +49,22 @@ bulletY_change = 1
 bullet_state = "ready"
 
 # game score
-score = 0
+score_value = 0
+font = pygame.font.Font('freesansbold.ttf', 32)
 
+textX = 10
+textY = 10
+
+def show_score(x, y):
+    score = font.render("Score:" + str(score_value), True, (255, 255, 255))
+    screen.blit(score, (x, y))
 
 def player(x, y):
     screen.blit(playerImg, (x, y))
 
 
-def enemy(x, y):
-    screen.blit(enemyImg, (x, y))
+def enemy(x, y, i):
+    screen.blit(enemyImg[i], (x, y))
 
 
 def fire_bullet(x, y):
@@ -79,7 +94,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # check a key stroke is been pressed & wehter its right or left arrow key
+        # check a keystroke is being pressed & whether its right or left arrow key
         if event.type == pygame.KEYDOWN:
             print("Keystroke is been pressed")
             if event.key == pygame.K_LEFT:
@@ -107,20 +122,34 @@ while running:
     elif playerX >= 736:
         playerX = 736
 
-    player(playerX, playerY)
+
 
     # Calling for the enemy function
-    enemyX += enemyX_change
-    # setup some boundaries for the enemy ship
-    if enemyX <= 0:
-        enemyX_change = 0.3
-        enemyY += enemyY_change
-        enemyX = 0
-    elif enemyX >= 736:
-        enemyX_change = -0.3
-        enemyY += enemyY_change
-        enemyX = 736
-    enemy(enemyX, enemyY)
+    for i in range(num_of_enemies):
+        enemyX[i] += enemyX_change[i]
+        # setup some boundaries for the enemy ship
+        if enemyX[i] <= 0:
+            enemyX_change[i] = 0.3
+            enemyY[i] += enemyY_change[i]
+            # enemyX[i] = 0
+        elif enemyX[i] >= 736:
+            enemyX_change[i] = -0.3
+            enemyY[i] += enemyY_change[i]
+            # enemyX[i] = 736
+        # enemy(enemyX[i], enemyY[i], i)
+
+        # Collision
+        collision = isCollision(enemyX[i], bulletX, enemyY[i], bulletY)
+        if collision:
+            bulletY = 480
+            bullet_state = "ready"
+            score_value += 1
+            # print("score: " + str(score))
+            enemyX[i] = random.randint(0, 800)
+            enemyY[i] = random.randint(50, 150)
+
+        # enemyX[i] = 736
+        enemy(enemyX[i], enemyY[i], i)
 
     # Bullet movement
     if bulletY <= 0:
@@ -131,12 +160,6 @@ while running:
         fire_bullet(bulletX, bulletY)
         bulletY -= bulletY_change
 
-    # Collision
-    collision = isCollision(enemyX, bulletX, enemyY, bulletY)
-    if collision:
-        bulletY = 480
-        bullet_state = "ready"
-        score += 1
-        print("score: " + str(score))
-
+    player(playerX, playerY)
+    show_score(textX, textY)
     pygame.display.update()
